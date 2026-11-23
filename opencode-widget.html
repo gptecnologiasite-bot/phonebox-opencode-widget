@@ -1,0 +1,58 @@
+﻿<style>
+  .oc{display:flex;flex-direction:column;height:100%;box-sizing:border-box;padding:2.2vh 2.6vh;gap:1vh}
+  .oc-h{display:flex;align-items:center;gap:1.4vh}
+  .oc-g{font-size:5.2vh;line-height:1;color:#38bdf8;text-shadow:0 0 1.4vh rgba(56,189,248,.55)}
+  .oc-t{font-size:3.4vh;font-weight:700;letter-spacing:.02em}
+  .oc-s{margin-left:auto;font-size:2.1vh;color:#94a3b8}
+  .oc-total{display:flex;align-items:baseline;gap:1.2vh;margin-top:.3vh}
+  .oc-big{font-size:8.2vh;font-weight:800;line-height:1;color:#e0f2fe;font-variant-numeric:tabular-nums}
+  .oc-lbl{font-size:2.1vh;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em}
+  .oc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8vh 1.4vh}
+  .oc-cell{background:rgba(148,163,184,.10);border:1px solid rgba(148,163,184,.16);border-radius:1.4vh;padding:.9vh 1.1vh}
+  .oc-k{font-size:1.9vh;color:#94a3b8}
+  .oc-v{font-size:3.4vh;font-weight:700;margin-top:.25vh;font-variant-numeric:tabular-nums}
+  .oc-bar{height:.9vh;border-radius:1vh;background:rgba(148,163,184,.18);overflow:hidden}
+  .oc-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#818cf8)}
+  .oc-list{margin-top:auto;display:flex;flex-direction:column;gap:.6vh;max-height:30%;overflow:hidden}
+  .oc-row{display:flex;align-items:center;gap:1vh;font-size:2.1vh;background:rgba(148,163,184,.07);border-radius:1vh;padding:.65vh 1vh}
+  .oc-dot{width:1vh;height:1vh;border-radius:50%;background:#22c55e;flex:none}
+  .oc-dot.idle{background:#64748b}.oc-dot.waiting{background:#f59e0b}
+  .oc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .oc-tok{color:#94a3b8;font-variant-numeric:tabular-nums}
+  .oc-foot{font-size:2vh;color:#64748b;text-align:center;margin-top:.2vh;cursor:pointer}
+</style>
+<div class="oc">
+  <div class="oc-h"><span class="oc-g">◈</span><span class="oc-t">OpenCode</span><span class="oc-s" id="cnt">– sessões</span></div>
+  <div class="oc-total"><span class="oc-big" id="tot">–</span><span class="oc-lbl">tokens no período</span></div>
+  <div class="oc-grid">
+    <div class="oc-cell"><div class="oc-k">Entrada / saída</div><div class="oc-v" id="io">–</div></div>
+    <div class="oc-cell"><div class="oc-k">Cache / raciocínio</div><div class="oc-v" id="cr">–</div></div>
+  </div>
+  <div class="oc-bar"><i id="bar" style="width:0%"></i></div>
+  <div class="oc-list" id="list"></div>
+  <div class="oc-foot" id="go">Abrir página Sessions →</div>
+</div>
+<script>
+(function(){
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function fmt(n){n=+n||0;if(n>=1e6)return (n/1e6).toFixed(1).replace('.',',')+' M';if(n>=1e3)return (n/1e3).toFixed(1).replace('.',',')+' k';return String(Math.round(n))}
+  function render(w){
+    var ss=(w&&w.sessions||[]).filter(function(s){return s&&s.tool==='opencode'});
+    var t=0,i=0,o=0,c=0,r=0;
+    ss.forEach(function(s){t+=+s.totalTokens||0;i+=+s.inputTokens||0;o+=+s.outputTokens||0;c+=+s.cachedInputTokens||0;r+=+s.reasoningTokens||0});
+    document.getElementById('cnt').textContent=ss.length+(ss.length===1?' sessão':' sessões');
+    document.getElementById('tot').textContent=fmt(t);
+    document.getElementById('io').textContent=fmt(i)+' / '+fmt(o);
+    document.getElementById('cr').textContent=fmt(c)+' / '+fmt(r);
+    document.getElementById('bar').style.width=(t?Math.min(100,Math.round(c/t*100)):0)+'%';
+    document.getElementById('list').innerHTML=ss.slice(0,4).map(function(s){
+      var st=s.status==='busy'?'trabalhando':s.status==='waiting'?'aguardando':'ociosa';
+      return '<div class="oc-row"><i class="oc-dot '+(s.status||'')+'"></i><span class="oc-name">'+esc(s.project||s.name||'?')+' · '+esc(s.model||'')+' · '+st+'</span><span class="oc-tok">'+fmt(s.totalTokens)+'</span></div>'
+    }).join('')||'<div class="oc-foot">Nenhuma sessão recente</div>';
+  }
+  document.getElementById('go').onclick=function(){phonebox.goto('work')};
+  phonebox.on('work',render);
+  if(phonebox.data&&phonebox.data.work)render(phonebox.data.work);
+})();
+</script>
+

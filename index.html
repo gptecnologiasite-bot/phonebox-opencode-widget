@@ -1,0 +1,101 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PhoneBox - OpenCode Widget (demo)</title>
+<style>
+  :root{color-scheme:dark}
+  html,body{margin:0;height:100%;background:#0b1220;color:#eef2f6;font-family:Roboto,"Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:560px;margin:0 auto;padding:24px}
+  h1{font-size:20px;margin:0 0 8px}
+  p{color:#94a3b8;margin:0 0 16px;font-size:14px;line-height:1.4}
+  .phone{background:#111827;border:1px solid rgba(148,163,184,.18);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  .bar{padding:10px 14px;font-size:12px;color:#94a3b8;border-bottom:1px solid rgba(148,163,184,.12);display:flex;justify-content:space-between}
+  .widget{height:420px;background:linear-gradient(180deg,#0f172a,#111827)}
+  code{background:rgba(148,163,184,.12);padding:.1em .35em;border-radius:.35em}
+  a{color:#38bdf8}
+</style>
+<div class="wrap">
+  <h1>◈ PhoneBox — Widget OpenCode</h1>
+  <p>Demo estática do widget personalizado usado na página <code>AI quotas</code> do PhoneBox. Fora do PhoneBox, os dados abaixo são simulados.</p>
+  <div class="phone">
+    <div class="bar"><span>AI quotas · demo</span><span>dados simulados</span></div>
+    <div class="widget" id="mount">﻿<style>
+  .oc{display:flex;flex-direction:column;height:100%;box-sizing:border-box;padding:2.2vh 2.6vh;gap:1vh}
+  .oc-h{display:flex;align-items:center;gap:1.4vh}
+  .oc-g{font-size:5.2vh;line-height:1;color:#38bdf8;text-shadow:0 0 1.4vh rgba(56,189,248,.55)}
+  .oc-t{font-size:3.4vh;font-weight:700;letter-spacing:.02em}
+  .oc-s{margin-left:auto;font-size:2.1vh;color:#94a3b8}
+  .oc-total{display:flex;align-items:baseline;gap:1.2vh;margin-top:.3vh}
+  .oc-big{font-size:8.2vh;font-weight:800;line-height:1;color:#e0f2fe;font-variant-numeric:tabular-nums}
+  .oc-lbl{font-size:2.1vh;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em}
+  .oc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8vh 1.4vh}
+  .oc-cell{background:rgba(148,163,184,.10);border:1px solid rgba(148,163,184,.16);border-radius:1.4vh;padding:.9vh 1.1vh}
+  .oc-k{font-size:1.9vh;color:#94a3b8}
+  .oc-v{font-size:3.4vh;font-weight:700;margin-top:.25vh;font-variant-numeric:tabular-nums}
+  .oc-bar{height:.9vh;border-radius:1vh;background:rgba(148,163,184,.18);overflow:hidden}
+  .oc-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#818cf8)}
+  .oc-list{margin-top:auto;display:flex;flex-direction:column;gap:.6vh;max-height:30%;overflow:hidden}
+  .oc-row{display:flex;align-items:center;gap:1vh;font-size:2.1vh;background:rgba(148,163,184,.07);border-radius:1vh;padding:.65vh 1vh}
+  .oc-dot{width:1vh;height:1vh;border-radius:50%;background:#22c55e;flex:none}
+  .oc-dot.idle{background:#64748b}.oc-dot.waiting{background:#f59e0b}
+  .oc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+  .oc-tok{color:#94a3b8;font-variant-numeric:tabular-nums}
+  .oc-foot{font-size:2vh;color:#64748b;text-align:center;margin-top:.2vh;cursor:pointer}
+</style>
+<div class="oc">
+  <div class="oc-h"><span class="oc-g">◈</span><span class="oc-t">OpenCode</span><span class="oc-s" id="cnt">– sessões</span></div>
+  <div class="oc-total"><span class="oc-big" id="tot">–</span><span class="oc-lbl">tokens no período</span></div>
+  <div class="oc-grid">
+    <div class="oc-cell"><div class="oc-k">Entrada / saída</div><div class="oc-v" id="io">–</div></div>
+    <div class="oc-cell"><div class="oc-k">Cache / raciocínio</div><div class="oc-v" id="cr">–</div></div>
+  </div>
+  <div class="oc-bar"><i id="bar" style="width:0%"></i></div>
+  <div class="oc-list" id="list"></div>
+  <div class="oc-foot" id="go">Abrir página Sessions →</div>
+</div>
+<script>
+(function(){
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function fmt(n){n=+n||0;if(n>=1e6)return (n/1e6).toFixed(1).replace('.',',')+' M';if(n>=1e3)return (n/1e3).toFixed(1).replace('.',',')+' k';return String(Math.round(n))}
+  function render(w){
+    var ss=(w&&w.sessions||[]).filter(function(s){return s&&s.tool==='opencode'});
+    var t=0,i=0,o=0,c=0,r=0;
+    ss.forEach(function(s){t+=+s.totalTokens||0;i+=+s.inputTokens||0;o+=+s.outputTokens||0;c+=+s.cachedInputTokens||0;r+=+s.reasoningTokens||0});
+    document.getElementById('cnt').textContent=ss.length+(ss.length===1?' sessão':' sessões');
+    document.getElementById('tot').textContent=fmt(t);
+    document.getElementById('io').textContent=fmt(i)+' / '+fmt(o);
+    document.getElementById('cr').textContent=fmt(c)+' / '+fmt(r);
+    document.getElementById('bar').style.width=(t?Math.min(100,Math.round(c/t*100)):0)+'%';
+    document.getElementById('list').innerHTML=ss.slice(0,4).map(function(s){
+      var st=s.status==='busy'?'trabalhando':s.status==='waiting'?'aguardando':'ociosa';
+      return '<div class="oc-row"><i class="oc-dot '+(s.status||'')+'"></i><span class="oc-name">'+esc(s.project||s.name||'?')+' · '+esc(s.model||'')+' · '+st+'</span><span class="oc-tok">'+fmt(s.totalTokens)+'</span></div>'
+    }).join('')||'<div class="oc-foot">Nenhuma sessão recente</div>';
+  }
+  document.getElementById('go').onclick=function(){phonebox.goto('work')};
+  phonebox.on('work',render);
+  if(phonebox.data&&phonebox.data.work)render(phonebox.data.work);
+})();
+</script>
+
+</div>
+  </div>
+  <p style="margin-top:16px">Arquivo do widget: <a href="opencode-widget.html">opencode-widget.html</a></p>
+</div>
+<script>
+window.phonebox = {
+  data: {},
+  _subs: {},
+  on: function(kind, fn){ (this._subs[kind]=this._subs[kind]||[]).push(fn); if(this.data[kind]!==undefined) try{fn(this.data[kind])}catch(e){console.error(e)} },
+  emit: function(kind, value){ this.data[kind]=value; (this._subs[kind]||[]).forEach(function(fn){ try{fn(value)}catch(e){console.error(e)} }); },
+  run: function(id){ alert('phonebox.run('+id+') - só funciona dentro do PhoneBox'); },
+  goto: function(page){ alert('phonebox.goto('+page+') - só funciona dentro do PhoneBox'); }
+};
+</script>
+
+<script>
+phonebox.emit('work', {sessions:[
+  {tool:'opencode',project:'PhoneBox',name:'ses_df7',model:'big-pickle',status:'busy',totalTokens:33500000,inputTokens:1100000,outputTokens:69000,cachedInputTokens:36200000,reasoningTokens:71900},
+  {tool:'opencode',project:'PhoneBox',name:'ses_df7b',model:'big-pickle',status:'idle',totalTokens:3500000,inputTokens:120000,outputTokens:8000,cachedInputTokens:3300000,reasoningTokens:5200},
+  {tool:'opencode',project:'Downloads',name:'ses_df7c',model:'big-pickle',status:'idle',totalTokens:351600,inputTokens:14000,outputTokens:1200,cachedInputTokens:330000,reasoningTokens:900}
+]});
+</script>
